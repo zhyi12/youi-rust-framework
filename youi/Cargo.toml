@@ -1,0 +1,14 @@
+[package]
+name = "youi"
+version = "0.1.0"
+
+
+bench = [
+    "lazy",
+]
+
+[dependencies]
+youi-core = { version = "0.1.0", path = "./youi-core"}
+
+[lib]
+bench = false

@@ -1,0 +1,8 @@
+[workspace]
+members = [
+  "youi",
+  "youi/youi-core",
+  "youi/youi-sqlite",
+  "youi/youi-desktop",
+]
+

@@ -1,0 +1,7 @@
+[package]
+name = "youi-sqlite"
+version = "0.1.0"
+
+[dependencies]
+r2d2 = "0.8"
+diesel = { version = "1.4.8", features = ["sqlite","r2d2"] }

@@ -1,0 +1,6 @@
+[package]
+name = "youi-desktop"
+version = "0.1.0"
+
+[dependencies]
+youi-sqlite = { version = "0.1.0", path="../youi-sqlite" }

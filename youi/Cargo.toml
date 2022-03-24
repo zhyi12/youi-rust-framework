@@ -9,6 +9,7 @@ bench = [
 
 [dependencies]
 youi-core = { version = "0.1.0", path = "./youi-core"}
+youi-sqlite = { version = "0.1.0", path = "./youi-sqlite"}
 
 [lib]
 bench = false

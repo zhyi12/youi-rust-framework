@@ -11,7 +11,7 @@ use schema::stats_desktop_config::dsl::stats_desktop_config;
 use crate::models::{AppConfigItem};
 
 ///
-///
+///获取配置信息列表
 ///
 pub fn find_config_list(conn: &SqliteConnection) -> Vec<AppConfigItem> {
     let items = stats_desktop_config.limit(1000)

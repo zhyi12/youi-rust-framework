@@ -4,6 +4,7 @@ members = [
   "youi/youi-core",
   "youi/youi-sqlite",
   "youi/youi-desktop",
-  "youi/youi-app-config"
+  "youi/youi-app-config",
+  "youi/youi-dataframe"
 ]
 

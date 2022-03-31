@@ -4,3 +4,12 @@ version = "0.1.0"
 
 [dependencies]
 youi-sqlite = { version = "0.1.0", path="../youi-sqlite" }
+youi-dataframe = { version = "0.1.0", path="../youi-dataframe" }
+build-fs-tree = "0.3.0"
+walkdir = "2.3.2"
+serde_json = "1.0"
+polars-core = "0.20.0"
+polars-lazy = "0.20.0"
+polars-io = {version="0.20.0",features=["csv-file","json"]}
+rhai = "1.6.0"
+#deno_runtime={version="0.52.0",git="https://github.com/denoland/deno"}

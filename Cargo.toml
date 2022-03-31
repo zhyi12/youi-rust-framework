@@ -5,6 +5,7 @@ members = [
   "youi/youi-sqlite",
   "youi/youi-desktop",
   "youi/youi-app-config",
-  "youi/youi-dataframe"
+  "youi/youi-dataframe",
+  "youi/youi-fs"
 ]
 

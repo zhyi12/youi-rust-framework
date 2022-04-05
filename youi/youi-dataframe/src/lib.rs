@@ -1,6 +1,8 @@
 pub mod script;
+pub mod lazy;
 use polars_core::frame::DataFrame;
 use polars_io::prelude::*;
+use crate::lazy::eval_lazy_script;
 use crate::script::eval_df_script;
 
 ///
@@ -19,7 +21,7 @@ pub fn df_to_json(mut df:DataFrame)->String{
 ///
 ///
 pub fn df_script_executor(script:&str)->String{
-    let js_df = eval_df_script(script).unwrap();
-    let mut df = js_df.df;
+    let js_df = eval_lazy_script(script).unwrap();
+    let df = js_df.df.collect().unwrap();
     df_to_json(df)
 }

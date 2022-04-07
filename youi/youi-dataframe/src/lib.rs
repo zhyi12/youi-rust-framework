@@ -3,7 +3,6 @@ pub mod lazy;
 use polars_core::frame::DataFrame;
 use polars_io::prelude::*;
 use crate::lazy::eval_lazy_script;
-use crate::script::eval_df_script;
 
 ///
 ///

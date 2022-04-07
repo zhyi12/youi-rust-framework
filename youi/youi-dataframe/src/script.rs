@@ -4,7 +4,6 @@ use polars_core::prelude::DataFrame;
 use polars_core::prelude::groupby::GroupBy;
 use polars_io::csv::CsvReader;
 use polars_io::SerReader;
-use polars_lazy::dsl::col;
 
 use rhai::{Engine, EvalAltResult, Dynamic};
 use rhai::serde::from_dynamic;
@@ -126,6 +125,7 @@ pub fn eval_df_script(script:&str)->Result<JsDataFrame, Box<EvalAltResult>>{
     engine.register_fn("readCsv", JsDataFrame::read_csv)
         .register_fn("cubeQuery",JsDataFrame::cube_query)
         .register_fn("sort",JsDataFrame::sort)
+        .register_fn("filter",JsDataFrame::filter)
         .register_fn("groupBy",JsDataFrame::group_by);
 
     let result = engine.eval(script);

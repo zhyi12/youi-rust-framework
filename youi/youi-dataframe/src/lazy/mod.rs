@@ -1,10 +1,7 @@
-
-use polars_core::frame::DataFrame;
-use polars_core::prelude::PolarsError;
-use polars_core::prelude::Result as PolarsResult;
+use polars_core::prelude::SortOptions;
 use polars_lazy::dsl::col;
 use rhai::plugin::*;
-use polars_lazy::prelude::{AggExpr, DynamicGroupOptions, Expr, LazyCsvReader, LazyFrame};
+use polars_lazy::prelude::{Expr, LazyCsvReader, LazyFrame};
 use rhai::serde::from_dynamic;
 
 ///
@@ -52,6 +49,17 @@ impl JsLazyFrame {
         let df = self.df.groupby(by).agg(aggs);
         Self{df}
     }
+    ///
+    /// 排序
+    ///
+    fn sort(self,name:String,descending:bool)->Self{
+        let sort_opt = SortOptions{
+            descending,
+            nulls_last: true
+        };
+        let df = self.df.sort(&name, sort_opt);
+        Self{df}
+    }
 }
 
 fn build_col_expr(expr:&ColExpr)-> Expr{
@@ -59,9 +67,7 @@ fn build_col_expr(expr:&ColExpr)-> Expr{
     let name = clone.name;
     let aggregate = clone.aggregate;
 
-    let mut alias = String::from(&name);
-    alias.push_str("_");
-    alias.push_str(&aggregate);
+    let alias = format!("{}_{}",name,aggregate);
 
     finish_agg_expr(col(&name),&aggregate).alias(&alias)
 }
@@ -86,7 +92,8 @@ pub fn eval_lazy_script(script:&str) ->Result<JsLazyFrame, Box<EvalAltResult>>{
     let mut engine = Engine::new();
 
     engine.register_fn("readCsv",JsLazyFrame::read_csv)
-        .register_fn("agg",JsLazyFrame::agg);
+        .register_fn("agg",JsLazyFrame::agg)
+        .register_fn("sort",JsLazyFrame::sort);
 
     let result = engine.eval(script);
 

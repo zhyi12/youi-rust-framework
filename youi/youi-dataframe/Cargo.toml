@@ -11,7 +11,7 @@ polars-lazy = {version="0.20.0",features=["csv-file"]}
 polars-io = {version="0.20.0",features=["csv-file","json"]}
 rhai = {version="1.6.0",features=["serde"]}
 serde = "1.0"
-serde_json = { version = "1", optional = true }
+serde_json = { version = "1"}
 
 r2d2 = "0.8"
 diesel = { version = "1.4.8", features = ["sqlite"] }

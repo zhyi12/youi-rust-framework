@@ -23,12 +23,6 @@ pub struct JsExpr{
 }
 
 #[derive(Debug,Clone, serde::Deserialize)]
-struct AggParam{
-    group_names:Vec<String>,
-    col_exprs:Vec<ColExpr>
-}
-
-#[derive(Debug,Clone, serde::Deserialize)]
 struct ColExpr{
     name:String,
     aggregate:String,
@@ -164,6 +158,34 @@ impl JsExpr {
         Self{expr:self.expr.first()}
     }
 
+    fn last(self)->Self{
+        Self{expr:self.expr.last()}
+    }
+
+    fn count(self)->Self{
+        Self{expr:self.expr.count()}
+    }
+
+    fn sum(self)->Self{
+        Self{expr:self.expr.sum()}
+    }
+
+    fn min(self)->Self{
+        Self{expr:self.expr.min()}
+    }
+
+    fn max(self)->Self{
+        Self{expr:self.expr.max()}
+    }
+
+    fn list(self)->Self{
+        Self{expr:self.expr.list()}
+    }
+
+    fn alias(self,alias_name:String)->Self{
+        Self{expr:self.expr.alias(&alias_name)}
+    }
+
     fn is_null(self)->Self{
         println!("{}","is null expr");
         Self{expr:self.expr.is_null()}
@@ -268,6 +290,15 @@ pub fn eval_lazy_script(script:&str) ->Result<JsLazyFrame, Box<EvalAltResult>>{
         .register_fn("gte",JsExpr::gt_eq)
         .register_fn("lt",JsExpr::lt)
         .register_fn("lte",JsExpr::lt_eq)
+
+        .register_fn("first",JsExpr::first)
+        .register_fn("last",JsExpr::last)
+        .register_fn("sum",JsExpr::sum)
+        .register_fn("count",JsExpr::count)
+        .register_fn("max",JsExpr::max)
+        .register_fn("min",JsExpr::min)
+        .register_fn("alias",JsExpr::alias)
+
         .register_fn("isNull",JsExpr::is_null);
 
     let result = engine.eval(script);

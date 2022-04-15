@@ -1,10 +1,13 @@
+use std::any::type_name;
 use polars_core::prelude::{JoinType, SortOptions};
 use polars_lazy::dsl::{col, cols};
 use polars_lazy::dsl::Expr::Literal;
 use polars_lazy::logical_plan::LiteralValue;
 use rhai::plugin::*;
 use polars_lazy::prelude::{Expr, LazyCsvReader, LazyFrame};
+use rhai::Array;
 use rhai::serde::from_dynamic;
+use serde::{Deserialize, Deserializer};
 
 ///
 ///
@@ -87,6 +90,15 @@ impl JsLazyFrame {
         Self{df}
     }
     ///
+    ///
+    ///
+    fn select(self,js_exprs:Vec<JsExpr>)->Self{
+        let exprs:Vec<Expr> = js_exprs.iter().map(|js_expr|js_expr.expr.clone()).collect();
+
+        Self { df:self.df.select(exprs)}
+    }
+
+    ///
     /// 过滤
     ///
     fn filter(self,expr:JsExpr) -> Self{
@@ -95,13 +107,10 @@ impl JsLazyFrame {
     ///
     /// 汇总
     ///
-    fn agg(self,param:Dynamic)->Self{
-        let agg_param:AggParam = from_dynamic(&param).unwrap();
-
-        let by:Vec<Expr> = agg_param.group_names.iter().map(|name|col(name)).collect();
-        let agg_list:Vec<Expr> = agg_param.col_exprs.iter().map(|expr|build_col_expr(expr)).collect();
-
-        let df = self.df.groupby(by).agg(agg_list);
+    fn agg(self,by:String,js_exprs:Vec<JsExpr>)->Self{
+        let by:Vec<Expr> = by.split(",").map(|name|col(name)).collect();
+        let exprs:Vec<Expr> = js_exprs.iter().map(|jsExpr|jsExpr.expr.clone()).collect();
+        let df = self.df.groupby(by).agg(exprs);
         Self{df}
     }
     ///
@@ -115,11 +124,31 @@ impl JsLazyFrame {
         let df = self.df.sort(&name, sort_opt);
         Self{df}
     }
+    ///
+    ///
+    ///
+    fn limit(self,n:u32)->Self{
+        Self{df:self.df.limit(n)}
+    }
 }
+
 
 impl JsExpr {
     fn col(name:String)->Self{
         Self{expr:col(&name)}
+    }
+
+    fn exprs(exprs: &mut Vec<Dynamic>)->Vec<JsExpr>{
+        let mut list:Vec<JsExpr> = Vec::new();
+
+        let iter = exprs.iter();
+
+        for elem in iter {
+            let js_expr:JsExpr = elem.clone_cast();
+            list.push(js_expr)
+        }
+
+        list
     }
 
     fn cols(names:&Vec<Dynamic>)->Self{
@@ -127,6 +156,12 @@ impl JsExpr {
             .map(|name|from_dynamic(name).unwrap()).collect();
         println!("{:?}",names);
         Self{expr:cols(names)}
+    }
+    ///
+    ///
+    ///
+    fn first(self)->Self{
+        Self{expr:self.expr.first()}
     }
 
     fn is_null(self)->Self{
@@ -211,6 +246,7 @@ pub fn eval_lazy_script(script:&str) ->Result<JsLazyFrame, Box<EvalAltResult>>{
     engine
         .register_type::<JsLazyFrame>()
         .register_fn("readCsv",JsLazyFrame::read_csv)
+        .register_fn("select",JsLazyFrame::select)
         .register_fn("join",JsLazyFrame::join)
         .register_fn("leftJoin",JsLazyFrame::left_join)
         .register_fn("agg",JsLazyFrame::agg)
@@ -219,12 +255,14 @@ pub fn eval_lazy_script(script:&str) ->Result<JsLazyFrame, Box<EvalAltResult>>{
         .register_type::<JsExpr>()
         .register_fn("col",JsExpr::col)
         .register_fn("cols",JsExpr::cols)
+        .register_fn("first",JsExpr::first)
         .register_fn("or",JsExpr::or)
         .register_fn("and",JsExpr::and)
         .register_fn("expr",JsExpr::value_expr)
         .register_fn("expr",JsExpr::value_expr_i64)
         .register_fn("expr",JsExpr::value_expr_bool)
         .register_fn("expr",JsExpr::value_expr_f64)
+        .register_fn("exprs",JsExpr::exprs)
         .register_fn("eq",JsExpr::eq)
         .register_fn("gt",JsExpr::gt)
         .register_fn("gte",JsExpr::gt_eq)

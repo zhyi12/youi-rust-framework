@@ -24,6 +24,7 @@ pub fn df_to_json(mut df:DataFrame)->String{
 ///
 pub fn df_script_executor(script:&str)->String{
     let js_df = eval_lazy_script(script).unwrap();
-    let df = js_df.df.collect().unwrap();
+    let err_msg = String::from("error script:")+script;
+    let df = js_df.df.collect().expect(&err_msg);
     df_to_json(df)
 }

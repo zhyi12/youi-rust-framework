@@ -1,10 +1,11 @@
 use std::any::type_name;
+use std::ops::{Add, Div, Mul, Sub};
 use polars_core::prelude::{JoinType, SortOptions};
 use polars_lazy::dsl::{col, cols};
-use polars_lazy::dsl::Expr::Literal;
+use polars_lazy::dsl::Expr::{BinaryExpr, Literal};
 use polars_lazy::logical_plan::LiteralValue;
 use rhai::plugin::*;
-use polars_lazy::prelude::{Expr, LazyCsvReader, LazyFrame};
+use polars_lazy::prelude::*;
 use rhai::Array;
 use rhai::serde::from_dynamic;
 use serde::{Deserialize, Deserializer};
@@ -103,7 +104,7 @@ impl JsLazyFrame {
     ///
     fn agg(self,by:String,js_exprs:Vec<JsExpr>)->Self{
         let by:Vec<Expr> = by.split(",").map(|name|col(name)).collect();
-        let exprs:Vec<Expr> = js_exprs.iter().map(|jsExpr|jsExpr.expr.clone()).collect();
+        let exprs:Vec<Expr> = js_exprs.iter().map(|js_expr|js_expr.expr.clone()).collect();
         let df = self.df.groupby(by).agg(exprs);
         Self{df}
     }
@@ -234,6 +235,27 @@ impl JsExpr {
     fn value_expr_f64(value:f64)->Self{
         Self{expr:Literal(LiteralValue::Float64(value))}
     }
+
+    fn concat_str(self,js_exprs:Vec<JsExpr>, sep: &str)-> Self{
+        let exprs:Vec<Expr> = js_exprs.iter().map(|js_expr|js_expr.expr.clone()).collect();
+        Self{expr:concat_str(exprs,sep)}
+    }
+
+    fn add(self,js_expr:JsExpr)->Self{
+        Self{expr:self.expr.add(js_expr.expr)}
+    }
+
+    fn sub(self,js_expr:JsExpr)->Self{
+        Self{expr:self.expr.sub(js_expr.expr)}
+    }
+
+    fn mul(self,js_expr:JsExpr)->Self{
+        Self{expr:self.expr.mul(js_expr.expr)}
+    }
+
+    fn div(self,js_expr:JsExpr)->Self{
+        Self{expr:self.expr.div(js_expr.expr)}
+    }
 }
 
 fn build_col_expr(expr:&ColExpr)-> Expr{
@@ -299,7 +321,13 @@ pub fn eval_lazy_script(script:&str) ->Result<JsLazyFrame, Box<EvalAltResult>>{
         .register_fn("min",JsExpr::min)
         .register_fn("alias",JsExpr::alias)
 
-        .register_fn("isNull",JsExpr::is_null);
+        .register_fn("isNull",JsExpr::is_null)
+        .register_fn("concat_str",JsExpr::concat_str)
+
+        .register_fn("add",JsExpr::add)
+        .register_fn("sub",JsExpr::sub)
+        .register_fn("mul",JsExpr::mul)
+        .register_fn("div",JsExpr::div);
 
     let result = engine.eval(script);
 

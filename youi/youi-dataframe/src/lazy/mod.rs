@@ -1,14 +1,11 @@
-use std::any::type_name;
 use std::ops::{Add, Div, Mul, Sub};
 use polars_core::prelude::{JoinType, SortOptions};
 use polars_lazy::dsl::{col, cols};
-use polars_lazy::dsl::Expr::{BinaryExpr, Literal};
+use polars_lazy::dsl::Expr::{Literal};
 use polars_lazy::logical_plan::LiteralValue;
 use rhai::plugin::*;
 use polars_lazy::prelude::*;
-use rhai::Array;
 use rhai::serde::from_dynamic;
-use serde::{Deserialize, Deserializer};
 
 ///
 ///
@@ -23,12 +20,6 @@ pub struct JsExpr{
     pub expr:Expr,
 }
 
-#[derive(Debug,Clone, serde::Deserialize)]
-struct ColExpr{
-    name:String,
-    aggregate:String,
-}
-
 impl JsLazyFrame {
     ///
     /// 读取csv文件
@@ -36,6 +27,28 @@ impl JsLazyFrame {
     fn read_csv(path:String) -> Self {
         let df = LazyCsvReader::new(path).finish().unwrap();
         Self{df}
+    }
+
+    ///
+    ///
+    ///
+    fn pager_read_csv(path:String,page_index:i64,page_size:i64) -> Self {
+        let start_row:usize = ((page_index-1)*page_size) as usize;
+        let df = LazyCsvReader::new(path)
+            .with_skip_rows(start_row)
+            .with_n_rows(Option::Some(page_size as usize))
+            .finish().unwrap();
+        Self{df}
+    }
+
+    ///
+    /// 读取每一列第一个数据
+    ///
+    fn read_first(self)-> Self{
+        let clone = self.df.clone().collect().unwrap();
+        let column_names = clone.get_column_names();
+        let exprs:Vec<Expr> = column_names.iter().map(|name|col(name).first()).collect();
+        Self{df:self.df.select(exprs)}
     }
 
     ///
@@ -122,8 +135,8 @@ impl JsLazyFrame {
     ///
     ///
     ///
-    fn limit(self,n:u32)->Self{
-        Self{df:self.df.limit(n)}
+    fn limit(self,n:i64)->Self{
+        Self{df:self.df.limit(n as u32)}
     }
 }
 
@@ -258,29 +271,6 @@ impl JsExpr {
     }
 }
 
-fn build_col_expr(expr:&ColExpr)-> Expr{
-    let clone:ColExpr  = expr.clone();
-    let name = clone.name;
-    let aggregate = clone.aggregate;
-
-    let alias = format!("{}_{}",name,aggregate);
-
-    finish_agg_expr(col(&name),&aggregate).alias(&alias)
-}
-
-fn finish_agg_expr(expr:Expr ,aggregate: &str) -> Expr {
-    match aggregate {
-        "min" => expr.min(),
-        "max" => expr.max(),
-        "mean" => expr.mean(),
-        "first" => expr.first(),
-        "last" => expr.last(),
-        "sum" => expr.sum(),
-        "count" => expr.count(),
-        _ => expr
-    }
-}
-
 ///
 ///
 ///
@@ -289,13 +279,16 @@ pub fn eval_lazy_script(script:&str) ->Result<JsLazyFrame, Box<EvalAltResult>>{
 
     engine
         .register_type::<JsLazyFrame>()
-        .register_fn("readCsv",JsLazyFrame::read_csv)
+        .register_fn("read_csv",JsLazyFrame::read_csv)
+        .register_fn("pager_read_csv",JsLazyFrame::pager_read_csv)
+        .register_fn("read_first",JsLazyFrame::read_first)
         .register_fn("select",JsLazyFrame::select)
         .register_fn("join",JsLazyFrame::join)
-        .register_fn("leftJoin",JsLazyFrame::left_join)
+        .register_fn("left_join",JsLazyFrame::left_join)
         .register_fn("agg",JsLazyFrame::agg)
         .register_fn("sort",JsLazyFrame::sort)
         .register_fn("filter",JsLazyFrame::filter)
+        .register_fn("limit",JsLazyFrame::limit)
         .register_type::<JsExpr>()
         .register_fn("col",JsExpr::col)
         .register_fn("cols",JsExpr::cols)
@@ -319,6 +312,7 @@ pub fn eval_lazy_script(script:&str) ->Result<JsLazyFrame, Box<EvalAltResult>>{
         .register_fn("count",JsExpr::count)
         .register_fn("max",JsExpr::max)
         .register_fn("min",JsExpr::min)
+        .register_fn("list",JsExpr::list)
         .register_fn("alias",JsExpr::alias)
 
         .register_fn("isNull",JsExpr::is_null)

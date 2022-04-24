@@ -3,7 +3,6 @@ pub mod lazy;
 
 use polars_core::frame::DataFrame;
 use polars_io::prelude::*;
-use serde_json::Value::String;
 use crate::lazy::eval_lazy_script;
 
 extern crate serde_json;
@@ -26,7 +25,7 @@ pub fn df_to_json(mut df:DataFrame)->String{
 pub fn df_script_executor(script:&str)->String{
     let js_df = eval_lazy_script(script);
     if js_df.is_err(){
-        println!("script parse error:{},\n{}",js_df.err().unwrap(),String::from(str));
+        println!("script parse error:{},\n{}",js_df.err().unwrap(),script);
         String::from("[]")
     }else{
         let err_msg = String::from("error script:")+script;

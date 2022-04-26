@@ -132,6 +132,15 @@ impl JsLazyFrame {
         let df = self.df.sort(&name, sort_opt);
         Self{df}
     }
+
+    ///
+    /// 多列排序
+    ///
+    fn sort_by_exprs(self,js_exprs:Vec<JsExpr>,reverses:String)->Self{
+        let exprs:Vec<Expr> = js_exprs.iter().map(|js_expr|js_expr.expr.clone()).collect();
+        let reverse:Vec<bool> = reverses.split(",").map(|name|name.eq("true")).collect();
+        Self{df:self.df.sort_by_exprs(exprs,reverse)}
+    }
     ///
     ///
     ///
@@ -139,7 +148,6 @@ impl JsLazyFrame {
         Self{df:self.df.limit(n as u32)}
     }
 }
-
 
 impl JsExpr {
     fn col(name:String)->Self{
@@ -287,6 +295,7 @@ pub fn eval_lazy_script(script:&str) ->Result<JsLazyFrame, Box<EvalAltResult>>{
         .register_fn("left_join",JsLazyFrame::left_join)
         .register_fn("agg",JsLazyFrame::agg)
         .register_fn("sort",JsLazyFrame::sort)
+        .register_fn("sort_by_exprs",JsLazyFrame::sort_by_exprs)
         .register_fn("filter",JsLazyFrame::filter)
         .register_fn("limit",JsLazyFrame::limit)
         .register_type::<JsExpr>()

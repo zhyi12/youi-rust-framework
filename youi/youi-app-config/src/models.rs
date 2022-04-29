@@ -1,18 +1,9 @@
 
-#[derive(Queryable,serde::Serialize)]
+#[derive(Queryable,serde::Serialize,serde::Deserialize,Clone)]
 pub struct AppConfigItem {
     pub id: i32,
+    pub name: String,
     pub value: String,
-    pub name: String
 }
 
-impl Clone for AppConfigItem{
-    fn clone(&self) -> Self {
-        AppConfigItem {
-            id: self.id,
-            value: String::from(&self.value),
-            name: String::from(&self.name)
-        }
-    }
-}
 

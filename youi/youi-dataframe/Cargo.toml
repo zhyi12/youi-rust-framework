@@ -9,12 +9,10 @@ edition = "2021"
 polars-core = "0.20.0"
 polars-lazy = {version="0.20.0",features=["csv-file","concat_str"]}
 polars-io = {version="0.20.0",features=["csv-file","json"]}
-rhai = {version="1.6.0",features=["serde"]}
+rhai = {version="1.6.1",features=["serde"]}
 serde = "1.0"
 serde_json = { version = "1"}
 
-r2d2 = "0.8"
-diesel = { version = "1.4.8", features = ["sqlite"] }
 dotenv = "0.10"
 message-io = "0.14"
 

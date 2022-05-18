@@ -271,6 +271,10 @@ impl JsExpr {
         Self{expr:self.expr.apply(func,GetOutput::from_type(DataType::Utf8))}
     }
 
+    fn cast_str(self)->Self{
+        Self{expr:self.expr.cast(DataType::Utf8)}
+    }
+
     fn add(self,js_expr:JsExpr)->Self{
         Self{expr:self.expr.add(js_expr.expr)}
     }
@@ -336,6 +340,7 @@ pub fn eval_lazy_script(script:&str) ->Result<JsLazyFrame, Box<EvalAltResult>>{
         .register_fn("isNull",JsExpr::is_null)
         .register_fn("concat_str",JsExpr::concat_str)
         .register_fn("str_slice",JsExpr::str_slice)
+        .register_fn("cast_str",JsExpr::cast_str)
 
         .register_fn("add",JsExpr::add)
         .register_fn("sub",JsExpr::sub)

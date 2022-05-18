@@ -1,5 +1,5 @@
 use std::ops::{Add, Div, Mul, Sub};
-use polars_core::prelude::{JoinType, SortOptions};
+use polars_core::prelude::{DataType, IntoSeries, JoinType, Series, SortOptions};
 use polars_lazy::dsl::{col, cols};
 use polars_lazy::dsl::Expr::{Literal};
 use polars_lazy::logical_plan::LiteralValue;
@@ -261,6 +261,15 @@ impl JsExpr {
         let exprs:Vec<Expr> = js_exprs.iter().map(|js_expr|js_expr.expr.clone()).collect();
         Self{expr:concat_str(exprs,sep)}
     }
+    //
+    fn str_slice(self,start: i64,len:i64)->Self{
+        let func = move |s: Series| {
+            let ca = s.utf8()?;
+            Ok(ca.str_slice(start, Some(len as u64))?.into_series())
+        };
+
+        Self{expr:self.expr.apply(func,GetOutput::from_type(DataType::Utf8))}
+    }
 
     fn add(self,js_expr:JsExpr)->Self{
         Self{expr:self.expr.add(js_expr.expr)}
@@ -326,6 +335,7 @@ pub fn eval_lazy_script(script:&str) ->Result<JsLazyFrame, Box<EvalAltResult>>{
 
         .register_fn("isNull",JsExpr::is_null)
         .register_fn("concat_str",JsExpr::concat_str)
+        .register_fn("str_slice",JsExpr::str_slice)
 
         .register_fn("add",JsExpr::add)
         .register_fn("sub",JsExpr::sub)

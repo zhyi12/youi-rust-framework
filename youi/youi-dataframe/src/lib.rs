@@ -33,3 +33,12 @@ pub fn df_script_executor(script:&str)->String{
         df_to_json(df)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn it_works() {
+        let result = 2 + 2;
+        assert_eq!(result, 4);
+    }
+}

@@ -1,11 +1,14 @@
+use std::any::Any;
 use std::ops::{Add, Div, Mul, Sub};
-use polars_core::prelude::{DataType, IntoSeries, JoinType, Series, SortOptions};
+use polars_core::frame::DataFrame;
+use polars_core::prelude::{DataType, IntoSeries, JoinType, NamedFrom, Series, SortOptions};
 use polars_lazy::dsl::{col, cols};
 use polars_lazy::dsl::Expr::{Literal};
 use polars_lazy::logical_plan::LiteralValue;
 use rhai::plugin::*;
 use polars_lazy::prelude::*;
 use rhai::serde::from_dynamic;
+use rhai::Variant;
 
 ///
 ///
@@ -20,6 +23,11 @@ pub struct JsExpr{
     pub expr:Expr,
 }
 
+struct ColumnItem{
+    name:String,
+    data_type:String
+}
+
 impl JsLazyFrame {
     ///
     /// 读取csv文件
@@ -27,6 +35,30 @@ impl JsLazyFrame {
     fn read_csv(path:String) -> Self {
         let df = LazyCsvReader::new(path).finish().unwrap();
         Self{df}
+    }
+
+    ///
+    /// 读取csv头信息
+    ///
+    fn read_csv_header(path:String) -> Self{
+        let header_ldf = LazyCsvReader::new(path)
+            .with_skip_rows(0)
+            .with_n_rows(Option::Some(1))
+            .finish().unwrap();
+
+        let header_df = header_ldf.collect().unwrap();
+
+        let items:Vec<ColumnItem> = header_df.get_columns().iter().map(|s|(ColumnItem{
+            name:String::from(s.name()),
+            data_type:String::from(s.dtype().to_string())
+        })).collect();
+
+        let v1:Vec<String> = items.iter().map(|item|String::from(item.name.as_str())).collect();
+        let v2:Vec<String> = items.iter().map(|item|String::from(item.data_type.as_str())).collect();
+
+        let df = DataFrame::new(vec![Series::new("name",&v1), Series::new("dataType",&v2)]);
+
+        Self{df:df.unwrap().lazy()}
     }
 
     ///
@@ -50,6 +82,7 @@ impl JsLazyFrame {
         let exprs:Vec<Expr> = column_names.iter().map(|name|col(name).first()).collect();
         Self{df:self.df.select(exprs)}
     }
+
 
     ///
     /// 连接数据集
@@ -301,6 +334,7 @@ pub fn eval_lazy_script(script:&str) ->Result<JsLazyFrame, Box<EvalAltResult>>{
     engine
         .register_type::<JsLazyFrame>()
         .register_fn("read_csv",JsLazyFrame::read_csv)
+        .register_fn("read_csv_header",JsLazyFrame::read_csv_header)
         .register_fn("pager_read_csv",JsLazyFrame::pager_read_csv)
         .register_fn("read_first",JsLazyFrame::read_first)
         .register_fn("select",JsLazyFrame::select)

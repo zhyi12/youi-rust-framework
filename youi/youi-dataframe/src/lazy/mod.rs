@@ -8,7 +8,6 @@ use polars_lazy::logical_plan::LiteralValue;
 use rhai::plugin::*;
 use polars_lazy::prelude::*;
 use rhai::serde::from_dynamic;
-use rhai::Variant;
 
 ///
 ///

@@ -1,7 +1,4 @@
-use std::borrow::Borrow;
-use std::num::NonZeroUsize;
-use std::ops::Add;
-use rhai::{AST, ASTNode, Engine, Stmt, Expr, FnCallExpr, Identifier};
+use rhai::{AST, Engine, Stmt, Expr, FnCallExpr};
 
 ///
 /// 转换为可执行的脚本
@@ -59,12 +56,10 @@ fn transform_stmt(stmt:&Stmt)->String{
             scripts.push_str(&transform_expr(&x));
         }
         Stmt::BreakLoop(_, _) => {}
-        Stmt::Return(x, _, _) => {
+        Stmt::Return(_, _, _) => {
             //scripts.push_str(&transform_expr(&x.as_ref().unwrap()));
         }
-        Stmt::Import(_, _) => {}
-        Stmt::Export(_, _) => {}
-        Stmt::Share(_, _) => {}
+        _=> {}
     }
 
     scripts
@@ -137,27 +132,27 @@ fn transform_expr(expr:&Expr) -> String{
 ///
 ///处理四则运行
 ///
-fn transform_fn(fnExpr:&FnCallExpr) -> String{
+fn transform_fn(fn_expr:&FnCallExpr) -> String{
     let mut scripts:String = String::new();
 
-    match fnExpr.name.as_str() {
+    match fn_expr.name.as_str() {
         "+" => {
-            scripts.push_str(&transform_addition_fn(fnExpr,"add"));
+            scripts.push_str(&transform_addition_fn(fn_expr,"add"));
         }
         "-" => {
-            scripts.push_str(&transform_addition_fn(fnExpr,"sub"));
+            scripts.push_str(&transform_addition_fn(fn_expr,"sub"));
         }
         "*" => {
-            scripts.push_str(&transform_addition_fn(fnExpr,"mul"));
+            scripts.push_str(&transform_addition_fn(fn_expr,"mul"));
         }
         "/" => {
-            scripts.push_str(&transform_addition_fn(fnExpr,"div"));
+            scripts.push_str(&transform_addition_fn(fn_expr,"div"));
         }
         _ => {
-            scripts.push_str(&fnExpr.name);
+            scripts.push_str(&fn_expr.name);
             scripts.push_str("(");
-            if fnExpr.args.len()>0 {
-                for e in &fnExpr.args {
+            if fn_expr.args.len()>0 {
+                for e in &fn_expr.args {
                     scripts.push_str(&transform_expr(&e));
                     scripts.push_str(",");
                 }
@@ -171,13 +166,13 @@ fn transform_fn(fnExpr:&FnCallExpr) -> String{
 ///
 /// 四则运算函数处理
 ///
-fn transform_addition_fn(fnExpr:&FnCallExpr,op:&str)->String{
+fn transform_addition_fn(fn_expr:&FnCallExpr,op:&str)->String{
     let mut scripts:String = String::new();
-    scripts.push_str(&transform_addition(&fnExpr.args[0]));
+    scripts.push_str(&transform_addition(&fn_expr.args[0]));
     scripts.push_str(".");
     scripts.push_str(op);
     scripts.push_str("(");
-    scripts.push_str(&transform_addition(&fnExpr.args[1]));
+    scripts.push_str(&transform_addition(&fn_expr.args[1]));
     scripts.push_str(")");
     scripts
 }
@@ -193,7 +188,7 @@ fn transform_addition(expr:&Expr)->String{
             scripts.push_str(&transform_expr(expr));
             scripts.push_str(")");
         }
-        Expr::FnCall(x, _) | Expr::MethodCall(x, _) => {
+        Expr::FnCall(_, _) | Expr::MethodCall(_, _) => {
             scripts.push_str(&transform_expr(expr));
         }
         _=>{}

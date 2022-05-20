@@ -7,7 +7,7 @@ use polars_io::prelude::*;
 use crate::lazy::eval_lazy_script;
 
 extern crate serde_json;
-
+extern crate rhai;
 ///
 ///
 ///

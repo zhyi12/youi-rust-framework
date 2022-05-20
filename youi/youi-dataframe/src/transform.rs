@@ -43,11 +43,7 @@ fn transform_stmt(stmt:&Stmt)->String{
             println!("Assignment {:?}",x);
         }
         Stmt::FnCall(x, _) => {
-            println!("fn_call {}",x.name);
-
-            for e in &x.args {
-                println!("{:?}",e)
-            }
+            scripts.push_str(&transform_fn(&x))
         }
         Stmt::Block(_) => {}
         Stmt::TryCatch(_, _) => {}

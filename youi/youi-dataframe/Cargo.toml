@@ -9,7 +9,7 @@ edition = "2021"
 polars-core = {version="0.20.0",features=["strings","string_encoding"]}
 polars-lazy = {version="0.20.0",features=["csv-file","concat_str"]}
 polars-io = {version="0.20.0",features=["csv-file","json"]}
-rhai = {version="1.6.1",features=["serde","internals"]}
+rhai = {version="1.7.0",features=["serde","internals"]}
 serde = "1.0"
 serde_json = { version = "1"}
 

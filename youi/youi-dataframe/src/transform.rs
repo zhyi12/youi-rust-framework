@@ -39,7 +39,7 @@ fn transform_stmt(stmt:&Stmt)->String{
             scripts.push_str(&transform_expr(&x.1));
             scripts.push_str(";");
         }
-        Stmt::Assignment(x, _) => {
+        Stmt::Assignment(x) => {
             println!("Assignment {:?}",x);
         }
         Stmt::FnCall(x, _) => {
@@ -124,6 +124,7 @@ fn transform_expr(expr:&Expr) -> String{
         Expr::And(_, _) => {}
         Expr::Or(_, _) => {}
         Expr::Custom(_, _) => {}
+        _ => {}
     }
 
     scripts

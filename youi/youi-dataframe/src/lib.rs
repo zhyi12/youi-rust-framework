@@ -1,5 +1,6 @@
 pub mod script;
 pub mod lazy;
+pub mod transform;
 
 use polars_core::frame::DataFrame;
 use polars_io::prelude::*;
@@ -23,7 +24,9 @@ pub fn df_to_json(mut df:DataFrame)->String{
 ///
 ///
 pub fn df_script_executor(script:&str)->String{
-    let js_df = eval_lazy_script(script);
+    //脚本转换：四则运算等
+    let exec_script = transform::transform(script);
+    let js_df = eval_lazy_script(&exec_script);
     if js_df.is_err(){
         println!("script parse error:{},\n{}",js_df.err().unwrap(),script);
         String::from("[]")

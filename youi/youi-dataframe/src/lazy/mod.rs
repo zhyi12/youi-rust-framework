@@ -31,32 +31,63 @@ impl JsLazyFrame {
     /// 读取csv文件
     ///
     fn read_csv(path:String) -> Self {
-        let df = LazyCsvReader::new(path).finish().unwrap();
-        Self{df}
+        let mut errors :Vec<String> = Vec::new();
+
+        let result_df = LazyCsvReader::new(path).finish();
+
+        match result_df {
+            Ok(x) => {
+                return Self{df:x};
+            }
+            Err(_) => {
+                errors.push(String::from("数据文件异常"));
+            }
+        }
+
+        Self{df:DataFrame::new(vec![Series::new("error",&errors)]).unwrap().lazy()}
     }
 
     ///
     /// 读取csv头信息
     ///
     fn read_csv_header(path:String) -> Self{
-        let header_ldf = LazyCsvReader::new(path)
+        let result_lf = LazyCsvReader::new(path)
             .with_skip_rows(0)
             .with_n_rows(Option::Some(1))
-            .finish().unwrap();
+            .finish();
 
-        let header_df = header_ldf.collect().unwrap();
+        let mut errors :Vec<String> = Vec::new();
 
-        let items:Vec<ColumnItem> = header_df.get_columns().iter().map(|s|(ColumnItem{
-            name:String::from(s.name()),
-            data_type:String::from(s.dtype().to_string())
-        })).collect();
+        match result_lf {
+            Ok(x) => {
+                let result_df = x.collect();
 
-        let v1:Vec<String> = items.iter().map(|item|String::from(item.name.as_str())).collect();
-        let v2:Vec<String> = items.iter().map(|item|String::from(item.data_type.as_str())).collect();
+                match result_df {
+                    Ok(x) => {
+                        let items:Vec<ColumnItem> = x.get_columns().iter().map(|s|(ColumnItem{
+                            name:String::from(s.name()),
+                            data_type:String::from(s.dtype().to_string())
+                        })).collect();
 
-        let df = DataFrame::new(vec![Series::new("name",&v1), Series::new("dataType",&v2)]);
+                        let v1:Vec<String> = items.iter().map(|item|String::from(item.name.as_str())).collect();
+                        let v2:Vec<String> = items.iter().map(|item|String::from(item.data_type.as_str())).collect();
 
-        Self{df:df.unwrap().lazy()}
+                        let df = DataFrame::new(vec![Series::new("name",&v1), Series::new("dataType",&v2)]);
+
+                        return Self{df:df.unwrap().lazy()};
+                    }
+                    Err(_) => {
+                        errors.push(String::from("数据文件异常"));
+                    }
+                }
+            }
+            Err(_) => {
+                errors.push(String::from("csv 读取异常"));
+            }
+        }
+
+        Self{df:DataFrame::new(vec![Series::new("error",&errors)]).unwrap().lazy()}
+
     }
 
     ///
@@ -64,11 +95,22 @@ impl JsLazyFrame {
     ///
     fn pager_read_csv(path:String,page_index:i64,page_size:i64) -> Self {
         let start_row:usize = ((page_index-1)*page_size) as usize;
-        let df = LazyCsvReader::new(path)
+
+        let mut errors :Vec<String> = Vec::new();
+        let result_df = LazyCsvReader::new(path)
             .with_skip_rows(start_row)
             .with_n_rows(Option::Some(page_size as usize))
-            .finish().unwrap();
-        Self{df}
+            .finish();
+        match result_df {
+            Ok(x) => {
+                return Self{df:x};
+            }
+            Err(_) => {
+                errors.push(String::from("数据文件异常"));
+            }
+        }
+
+        Self{df:DataFrame::new(vec![Series::new("error",&errors)]).unwrap().lazy()}
     }
 
     ///

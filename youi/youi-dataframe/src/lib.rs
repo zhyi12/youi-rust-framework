@@ -4,7 +4,7 @@ pub mod transform;
 
 use polars_core::frame::DataFrame;
 use polars_io::prelude::*;
-use crate::lazy::eval_lazy_script;
+use crate::lazy::{eval_lazy_script};
 
 extern crate serde_json;
 extern crate rhai;
@@ -27,14 +27,25 @@ pub fn df_script_executor(script:&str)->String{
     //脚本转换：四则运算等
     let exec_script = transform::transform(script);
     let js_df = eval_lazy_script(&exec_script);
-    if js_df.is_err(){
-        println!("script parse error:{},\n{}",js_df.err().unwrap(),script);
-        String::from("[]")
-    }else{
-        let err_msg = String::from("error script:")+script;
-        let df = js_df.unwrap().df.collect().expect(&err_msg);
-        df_to_json(df)
+
+    match js_df {
+        Ok(x) => {
+            let result = x.df.collect();
+            match result {
+                Ok(df) => {
+                    return df_to_json(df);
+                }
+                Err(e) => {
+                    println!("df execute error:{:?},\n{}",e,script);
+                }
+            }
+        }
+        Err(_) => {
+            println!("script parse error:{},\n{}",js_df.err().unwrap(),script);
+        }
     }
+
+    String::from("[]")
 }
 
 #[cfg(test)]

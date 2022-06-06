@@ -1,11 +1,12 @@
 use std::ops::{Add, Div, Mul, Sub};
-use polars_core::frame::DataFrame;
+use polars_core::frame::{DataFrame, DistinctKeepStrategy};
 use polars_core::prelude::{DataType, IntoSeries, JoinType, NamedFrom, Series, SortOptions};
 use polars_lazy::dsl::{col, cols};
 use polars_lazy::dsl::Expr::{Literal};
 use polars_lazy::logical_plan::LiteralValue;
 use rhai::plugin::*;
 use polars_lazy::prelude::*;
+use rhai::Array;
 use rhai::serde::from_dynamic;
 
 ///
@@ -220,6 +221,14 @@ impl JsLazyFrame {
     fn limit(self,n:i64)->Self{
         Self{df:self.df.limit(n as u32)}
     }
+
+    ///
+    ///
+    ///
+    fn distinct(self,col_names:Array)->Self{
+        let names:Vec<String> = col_names.iter().map(|name|name.to_string()).collect();
+        Self{df:self.df.distinct(Some(names),DistinctKeepStrategy::First)}
+    }
 }
 
 impl JsExpr {
@@ -385,6 +394,7 @@ pub fn eval_lazy_script(script:&str) ->Result<JsLazyFrame, Box<EvalAltResult>>{
         .register_fn("sort_by_exprs",JsLazyFrame::sort_by_exprs)
         .register_fn("filter",JsLazyFrame::filter)
         .register_fn("limit",JsLazyFrame::limit)
+        .register_fn("distinct",JsLazyFrame::distinct)
         .register_type::<JsExpr>()
         .register_fn("col",JsExpr::col)
         .register_fn("cols",JsExpr::cols)

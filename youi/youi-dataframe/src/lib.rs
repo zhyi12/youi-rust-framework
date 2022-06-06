@@ -2,12 +2,15 @@ pub mod script;
 pub mod lazy;
 pub mod transform;
 
-use polars_core::frame::DataFrame;
-use polars_io::prelude::*;
+pub use polars_core::prelude::*;
+pub use polars_io::prelude::*;
+
 use crate::lazy::{eval_lazy_script};
 
 extern crate serde_json;
 extern crate rhai;
+
+extern crate polars_core;
 ///
 ///
 ///

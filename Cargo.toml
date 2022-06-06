@@ -6,6 +6,7 @@ members = [
   "youi/youi-desktop",
   "youi/youi-app-config",
   "youi/youi-dataframe",
+  "youi/youi-geo",
   "youi/youi-fs"
 ]
 

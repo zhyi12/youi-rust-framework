@@ -2,9 +2,7 @@
 members = [
   "youi",
   "youi/youi-core",
-  "youi/youi-sqlite",
   "youi/youi-desktop",
-  "youi/youi-app-config",
   "youi/youi-dataframe",
   "youi/youi-geo",
   "youi/youi-fs"

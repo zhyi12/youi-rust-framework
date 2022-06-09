@@ -54,7 +54,7 @@ pub fn geo_df_cluster(df:&DataFrame,poly:&Polygon<f64>,options:&DfClusterParamet
         let area_count_sum:i32 = entry.1.iter().map(|address_area|address_area.count).sum();
         //add to all_points
         entry.1.iter().for_each(|area|area.points.iter().for_each(|point|{
-            for i in 0..point.count{
+            for _ in 0..point.count{
                 all_points.push(vec![point.lng,point.lat]);
             }
         }));
@@ -217,7 +217,7 @@ fn to_group_area_map(address_areas:&Vec<AddressArea>,group_count:i32)->HashMap<S
         let address_area = address_areas.get(i).unwrap();
         let group = y_hat.get(i).unwrap().clone();
         let key = group.to_string();
-        let mut areas = Vec::new();
+        let areas = Vec::new();
         if !group_area_map.contains_key(&key){
             group_area_map.insert(key,areas);
         }

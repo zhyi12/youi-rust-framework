@@ -9,8 +9,9 @@ bench = [
 
 [dependencies]
 youi-core = { version = "0.1.0", path = "./youi-core"}
-youi-sqlite = { version = "0.1.0", path = "./youi-sqlite"}
-youi-app-config = {version = "0.1.0", path = "./youi-app-config"}
+youi-fs = { version = "0.1.0", path = "./youi-fs"}
+youi-dataframe = { version = "0.1.0", path = "./youi-dataframe"}
+youi-geo = { version = "0.1.0", path = "./youi-geo"}
 
 [lib]
 bench = false

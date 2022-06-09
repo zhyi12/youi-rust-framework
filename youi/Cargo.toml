@@ -1,6 +1,6 @@
 [package]
 name = "youi"
-version = "0.1.0"
+version = "0.1.1"
 
 
 bench = [
@@ -8,10 +8,10 @@ bench = [
 ]
 
 [dependencies]
-youi-core = { version = "0.1.0", path = "./youi-core"}
-youi-fs = { version = "0.1.0", path = "./youi-fs"}
-youi-dataframe = { version = "0.1.0", path = "./youi-dataframe"}
-youi-geo = { version = "0.1.0", path = "./youi-geo"}
+youi-core = { version = "0.1.1", path = "./youi-core"}
+youi-fs = { version = "0.1.1", path = "./youi-fs"}
+youi-dataframe = { version = "0.1.1", path = "./youi-dataframe"}
+youi-geo = { version = "0.1.1", path = "./youi-geo"}
 
 [lib]
 bench = false

@@ -2,6 +2,9 @@ pub mod script;
 pub mod lazy;
 pub mod transform;
 
+#[cfg(feature = "sqlite_dataframe")]
+pub mod sqlite_dataframe;
+
 pub use polars_core::prelude::*;
 pub use polars_io::prelude::*;
 

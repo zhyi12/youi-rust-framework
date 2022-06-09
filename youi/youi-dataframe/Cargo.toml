@@ -16,3 +16,14 @@ serde_json = { version = "1"}
 dotenv = "0.10"
 message-io = "0.14"
 
+sqlx = { version = "0.5", features = ["runtime-async-std-rustls", "sqlite"], optional = true }
+async-std = { version = "1.8.0", features = [ "attributes" ] , optional = true}
+futures = { version="0.3" ,optional = true}
+paw = { version="1.0" ,optional = true}
+anyhow={ version="1.0.57" ,optional = true}
+
+[features]
+any = []
+sqlite_dataframe=["sqlx","async-std","futures","paw","anyhow"]
+
+

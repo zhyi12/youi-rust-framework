@@ -30,7 +30,6 @@ pub async fn read_sql(pool:& Pool<Sqlite>, sql:&str) -> Result<DataFrame,Error> 
 ///
 fn build_columns_series(column:&SqliteColumn,row_data_arr:&Vec<Vec<AnyValue>>,idx:usize)->Series{
     let data_type = column.type_info().name();
-    println!("data_type {}",data_type);
     let column_name = column.name();
     match data_type {
         "REAL"=>{

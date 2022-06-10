@@ -1,24 +1,50 @@
-use std::iter::Cycle;
-use geo::{Geometry, GeometryCollection, Point, point, Polygon};
-use geojson::{FeatureCollection, GeoJson};
+use std::collections::HashMap;
+use geo::{Geometry, GeometryCollection, LineString, Point, point, Polygon};
+use geo::prelude::ConvexHull;
+use geojson::{FeatureCollection, GeoJson, Feature, JsonObject, JsonValue};
 use smartcore::linalg::BaseVector;
+use crate::AddressPoint;
 
 ///
 ///
 ///
-pub fn to_geo_json(polys:&Vec<Polygon<f64>>,points:&Vec<Vec<f64>>) -> GeoJson {
+pub fn to_geo_json(k_area_points:&HashMap<String,Vec<Point<f64>>>,address_points:&Vec<AddressPoint>) -> GeoJson {
 
-    let mut geometries:Vec<Geometry<f64>> = polys.iter().map(|poly|Geometry::from(poly.clone())).collect();
 
-    points.iter().for_each(|p|{
-        let p1: Cycle<f64> = (p.get(0), p.get(1)).into();
-        let gp = Geometry::from(p1);
-        geometries.push(gp);
+
+    //凸包输出多边形区域
+    let mut geometries:Vec<Feature> = k_area_points.iter().map(|entry|{
+        let poly_points:Polygon<f64> = Polygon::new(LineString::from(entry.1.clone()),vec![]);
+        //凸包
+        let hull =  poly_points.convex_hull();
+        let mut properties:JsonObject = JsonObject::new();
+        properties.insert(String::from("areaKey"),JsonValue::from(entry.0.to_string()));
+        Feature{
+            bbox: None,
+            geometry: Some(geojson::Geometry::from(&hull)),
+            id: None,
+            properties: Some(properties),
+            foreign_members: None
+        }
+    }).collect();
+
+    address_points.iter().for_each(|p|{
+        let p1: Geometry<f64> = point!(x: p.lng, y: p.lat).into();
+        let mut properties:JsonObject = JsonObject::new();
+        properties.insert(String::from("k"),JsonValue::from(p.group));
+
+        geometries.push(Feature{
+            bbox: None,
+            geometry: Some(geojson::Geometry::from(&p1)),
+            id: None,
+            properties:Some(properties),
+            foreign_members: None
+        });
     });
 
-    let geometry_collection = GeometryCollection::new_from(geometries);
-
-    let feature_collection:FeatureCollection = FeatureCollection::from(&geometry_collection);
-
-    GeoJson::FeatureCollection(feature_collection)
+    GeoJson::FeatureCollection(FeatureCollection{
+        bbox: None,
+        features: geometries,
+        foreign_members: None
+    })
 }

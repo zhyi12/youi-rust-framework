@@ -85,6 +85,8 @@ pub fn geo_df_cluster(df:&DataFrame,poly:&Polygon<f64>,options:&DfClusterParamet
     //
     let mut k_area_points:HashMap<String,Vec<Point<f64>>> = HashMap::new();
 
+    //
+    let mut address_points:Vec<AddressPoint> = Vec::with_capacity(result.len());
     for i in 0..result.len(){
         let area_key = result[i].to_string();
 
@@ -92,19 +94,19 @@ pub fn geo_df_cluster(df:&DataFrame,poly:&Polygon<f64>,options:&DfClusterParamet
             k_area_points.insert(String::from(&area_key), Vec::new());
         }
         let row:Vec<f64> = matrix_points.get_row_as_vec(i);
-        let point = point!(x:row.get(0).unwrap().clone(),y:row.get(1).unwrap().clone());
+        let x = row.get(0).unwrap().clone();
+        let y = row.get(1).unwrap().clone();
+        let point = point!(x:x,y:y);
         k_area_points.get_mut(&area_key).unwrap().push(point);
+        address_points.push(AddressPoint{
+            lat: x,
+            lng: y,
+            count: 0,
+            group: result[i] as i32
+        });
     }
-    //凸包输出多边形区域
-    let mut hulls:Vec<Polygon<f64>> = Vec::new();
-    k_area_points.iter().for_each(|entry|{
-        let poly_points:Polygon<f64> = Polygon::new(LineString::from(entry.1.clone()),vec![]);
-        //凸包
-        let hull =  poly_points.convex_hull();
-        hulls.push(hull);
-    });
 
-    let json:GeoJson = to_geo_json(&hulls,&all_points);
+    let json:GeoJson = to_geo_json(&k_area_points,&address_points);
 
     json.to_string()
 }

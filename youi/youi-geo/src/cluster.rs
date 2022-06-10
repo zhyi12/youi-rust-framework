@@ -104,7 +104,7 @@ pub fn geo_df_cluster(df:&DataFrame,poly:&Polygon<f64>,options:&DfClusterParamet
         hulls.push(hull);
     });
 
-    let json:GeoJson = to_geo_json(&hulls);
+    let json:GeoJson = to_geo_json(&hulls,&all_points);
 
     json.to_string()
 }

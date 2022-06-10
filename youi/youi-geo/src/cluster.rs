@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use geo::{Coordinate, LineString, point, Point, Polygon, polygon};
+use geo::{Coordinate, point, Point, Polygon, polygon};
 use geo::prelude::*;
 use geojson::GeoJson;
 use num_traits::ToPrimitive;
@@ -99,8 +99,8 @@ pub fn geo_df_cluster(df:&DataFrame,poly:&Polygon<f64>,options:&DfClusterParamet
         let point = point!(x:x,y:y);
         k_area_points.get_mut(&area_key).unwrap().push(point);
         address_points.push(AddressPoint{
-            lat: x,
-            lng: y,
+            lng: x,
+            lat: y,
             count: 0,
             group: result[i] as i32
         });

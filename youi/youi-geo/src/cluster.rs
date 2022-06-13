@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use geo::{Coordinate, point, Point, Polygon, polygon};
 use geo::prelude::*;
 use geojson::GeoJson;
@@ -87,6 +87,7 @@ pub fn geo_df_cluster(df:&DataFrame,poly:&Polygon<f64>,options:&DfClusterParamet
 
     //
     let mut address_points:Vec<AddressPoint> = Vec::with_capacity(result.len());
+    let mut point_keys:HashSet<String> = HashSet::new();
     for i in 0..result.len(){
         let area_key = result[i].to_string();
 
@@ -98,12 +99,21 @@ pub fn geo_df_cluster(df:&DataFrame,poly:&Polygon<f64>,options:&DfClusterParamet
         let y = row.get(1).unwrap().clone();
         let point = point!(x:x,y:y);
         k_area_points.get_mut(&area_key).unwrap().push(point);
-        address_points.push(AddressPoint{
-            lng: x,
-            lat: y,
-            count: 0,
-            group: result[i] as i32
-        });
+
+        let mut point_key:String = String::new();
+        point_key.push_str(x.to_string().as_str());
+        point_key.push_str("_");
+        point_key.push_str(y.to_string().as_str());
+
+        if !point_keys.contains(&point_key){
+            address_points.push(AddressPoint{
+                lng: x,
+                lat: y,
+                count: 0,
+                group: result[i] as i32
+            });
+            point_keys.insert(point_key);
+        }
     }
 
     let json:GeoJson = to_geo_json(&k_area_points,&address_points);

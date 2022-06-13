@@ -1,16 +1,13 @@
 use std::collections::HashMap;
-use geo::{Geometry, GeometryCollection, LineString, Point, point, Polygon};
+use geo::{Geometry, LineString, Point, point, Polygon};
 use geo::prelude::ConvexHull;
 use geojson::{FeatureCollection, GeoJson, Feature, JsonObject, JsonValue};
-use smartcore::linalg::BaseVector;
 use crate::AddressPoint;
 
 ///
 ///
 ///
 pub fn to_geo_json(k_area_points:&HashMap<String,Vec<Point<f64>>>,address_points:&Vec<AddressPoint>) -> GeoJson {
-
-
 
     //凸包输出多边形区域
     let mut geometries:Vec<Feature> = k_area_points.iter().map(|entry|{

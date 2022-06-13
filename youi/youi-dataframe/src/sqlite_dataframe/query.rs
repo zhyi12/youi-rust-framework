@@ -6,13 +6,21 @@ use crate::sqlite_dataframe::processor::SqlRowProcessor;
 ///
 /// 从sql中读取dataframe
 ///
-pub async fn read_sql(pool:& Pool<Sqlite>, sql:&str) -> Result<DataFrame,Error> {
+pub async fn read_sql(pool:& Pool<Sqlite>, sql:&str,bind_values:Vec<&str>) -> Result<DataFrame,Error> {
     let mut conn = pool.acquire().await?;
 
     let mut row_processor = SqlRowProcessor::new();
 
+    let mut query = sqlx::query(sql);
+
+    let bind_count = bind_values.len();
+
+    for i in 0..bind_count{
+        query = query.bind(bind_values.get(i).unwrap());
+    }
+
     //行数据
-    let row_data_arr:Vec<Vec<AnyValue>> = sqlx::query(sql)
+    let row_data_arr:Vec<Vec<AnyValue>> = query
         .map(|row:SqliteRow|row_processor.process(&row))
         .fetch_all(&mut conn).await?;
 

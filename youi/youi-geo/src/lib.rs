@@ -5,11 +5,12 @@ extern crate geo;
 
 use geo::Rect;
 
+#[derive(Clone)]
 pub struct AddressPoint {
     pub lng:f64,//经度
     pub lat:f64,//纬度
     pub count:i32,
-    pub group:i32
+    pub group:f64
 }
 
 pub struct AddressArea{

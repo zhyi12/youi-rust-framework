@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap};
 use geo::{Coordinate, point, Point, Polygon, polygon};
 use geo::prelude::*;
 use geojson::GeoJson;
@@ -21,6 +21,17 @@ pub struct DfClusterParameters{
 /// 地图数据聚合
 ///
 pub fn geo_df_cluster(df:&DataFrame,poly:&Polygon<f64>,options:&DfClusterParameters)->String{
+    let k_area_points:HashMap<String,Vec<Point<f64>>> = geo_df_cluster_points(df,poly,options);
+    let json:GeoJson = to_geo_json(&k_area_points);
+    json.to_string()
+}
+
+///
+///
+///
+pub fn geo_df_cluster_points(df:&DataFrame,poly:&Polygon<f64>,options:&DfClusterParameters)->HashMap<String,Vec<Point<f64>>>{
+    //聚合点Map
+    let mut k_area_points:HashMap<String,Vec<Point<f64>>> = HashMap::new();
     //
     let bound = poly.bounding_rect().unwrap();
 
@@ -28,23 +39,40 @@ pub fn geo_df_cluster(df:&DataFrame,poly:&Polygon<f64>,options:&DfClusterParamet
     let min_coord = bound.min();
     let x_split_count:i32 = ((max_coord.x - min_coord.x)/options.split_distance).ceil() as i32;
     let y_split_count:i32 = ((max_coord.y - min_coord.y)/options.split_distance).ceil() as i32;
-
+    println!("区域切分：{} {}",x_split_count,y_split_count);
     //提取大于options.group_size的地址数据
     let filter = df.column("count").unwrap().gt_eq(options.group_size);
     let df_gt_group = df.filter(&filter).unwrap();
-    //
-    println!("{:?}",df_gt_group.get_columns());
-
+    let gt_height = df_gt_group.height();
+    if gt_height>0 {
+        println!("超出{}个对象的坐标点个数{}",options.group_size,gt_height);
+    }
     //切分待处理区域
     let address_areas = split_address_areas(df,&min_coord,x_split_count,y_split_count,options);
 
     //推算需要分区的个数
     let all_count:i32 = address_areas.iter().map(|address_area|address_area.count).sum();
-    let group_count:i32 = all_count/options.group_size+1;
+    let group_count:usize = (all_count/options.group_size+1) as usize;
     println!("共{}个调查对象，预计分区个数：{}",all_count,group_count);
     //区域聚类
     let group_area_map:HashMap<String,Vec<AddressArea>> = to_group_area_map(&address_areas,group_count);
-
+    //坐标对象聚类
+    let address_points:Vec<AddressPoint> = predict_area(group_count,&group_area_map,options);
+    //
+    for i in 0..address_points.len(){
+        let area_key = address_points[i].group.to_string();
+        if !k_area_points.contains_key(&area_key){
+            k_area_points.insert(String::from(&area_key), Vec::new());
+        }
+        let point = point!(x:address_points[i].lng,y:address_points[i].lat);
+        k_area_points.get_mut(&area_key).unwrap().push(point);
+    }
+    k_area_points
+}
+///
+/// k means 对象区域预测
+///
+fn predict_area(group_count:usize,group_area_map:&HashMap<String,Vec<AddressArea>>,options:&DfClusterParameters)->Vec<AddressPoint>{
     let mut centroids:Vec<Vec<f64>> = Vec::new();
     let mut all_points:Vec<Vec<f64>> = Vec::new();
     group_area_map.iter().for_each(|entry|{
@@ -58,10 +86,10 @@ pub fn geo_df_cluster(df:&DataFrame,poly:&Polygon<f64>,options:&DfClusterParamet
                 all_points.push(vec![point.lng,point.lat]);
             }
         }));
-        if area_count_sum>options.group_size/3{
-            //质点个数
-            let centroid_count:f64 = (area_count_sum as f64/options.group_size as f64).ceil();
 
+        if area_count_sum>options.group_size/5{
+            //质点个数
+            let  centroid_count:f64 = (area_count_sum as f64/options.group_size as f64).ceil();
             println!("{:?} {},质点个数：{} ",entry.0,area_count_sum,centroid_count);
             //
             for i in 0..centroid_count.to_i32().unwrap(){
@@ -71,54 +99,35 @@ pub fn geo_df_cluster(df:&DataFrame,poly:&Polygon<f64>,options:&DfClusterParamet
             }
         }
     });
-
-    println!("{:?}",centroids);
-
+    //训练数据 - 质点数据
     let matrix_centroids = DenseMatrix::from_2d_vec(&centroids);
+    //预测数据 - 全部数据
     let matrix_points = DenseMatrix::from_2d_vec(&all_points);
 
+    let mut k = centroids.len();
+    if k>group_count {
+        k = group_count+1;
+    }
+    println!("共聚合生成{}个区域.",k);
     let k_means_point = KMeans::fit(&matrix_centroids, KMeansParameters::default()
-        .with_k(centroids.len()))
+        .with_k(k))
         .unwrap(); // Fit to data, 2 clusters
-    let result = k_means_point.predict(&matrix_points).unwrap(); // use the same points for prediction
-
-    //
-    let mut k_area_points:HashMap<String,Vec<Point<f64>>> = HashMap::new();
-
-    //
-    let mut address_points:Vec<AddressPoint> = Vec::with_capacity(result.len());
-    let mut point_keys:HashSet<String> = HashSet::new();
-    for i in 0..result.len(){
-        let area_key = result[i].to_string();
-
-        if !k_area_points.contains_key(&area_key){
-            k_area_points.insert(String::from(&area_key), Vec::new());
-        }
+    let result:Vec<f64> = k_means_point.predict(&matrix_points).unwrap(); // use the same points for prediction
+    let point_count = result.len();
+    let mut address_points:Vec<AddressPoint> = Vec::with_capacity(point_count);
+    for i in 0..point_count{
         let row:Vec<f64> = matrix_points.get_row_as_vec(i);
         let x = row.get(0).unwrap().clone();
         let y = row.get(1).unwrap().clone();
-        let point = point!(x:x,y:y);
-        k_area_points.get_mut(&area_key).unwrap().push(point);
-
-        let mut point_key:String = String::new();
-        point_key.push_str(x.to_string().as_str());
-        point_key.push_str("_");
-        point_key.push_str(y.to_string().as_str());
-
-        if !point_keys.contains(&point_key){
-            address_points.push(AddressPoint{
-                lng: x,
-                lat: y,
-                count: 0,
-                group: result[i] as i32
-            });
-            point_keys.insert(point_key);
-        }
+        address_points.push(AddressPoint{
+            lng: x,
+            lat: y,
+            count: 1,
+            group: result.get(i).unwrap().clone()
+        });
     }
 
-    let json:GeoJson = to_geo_json(&k_area_points,&address_points);
-
-    json.to_string()
+    address_points
 }
 
 ///
@@ -140,7 +149,7 @@ fn split_address_areas(df:&DataFrame,min_coord:&Coordinate<f64>,x_split_count:i3
                 if count>0{
                     //待合并区域
                     let rect = split_poly.bounding_rect().unwrap();
-                    println!("{},{}-{}, {},{:?}",index,dx,dy,count,rect);
+                    //println!("{},{}-{}, {},{:?}",index,dx,dy,count,rect);
                     address_areas.push(AddressArea{
                         index,
                         x: dx,
@@ -200,7 +209,7 @@ fn find_split_poly_points(df:&DataFrame,poly:&Polygon<f64>,group_size:i32)->Vec<
                     lng,
                     lat,
                     count,
-                    group:0
+                    group:0.
                 });
             }
         }
@@ -212,7 +221,7 @@ fn find_split_poly_points(df:&DataFrame,poly:&Polygon<f64>,group_size:i32)->Vec<
 ///
 /// k-means 区域聚类
 ///
-fn to_group_area_map(address_areas:&Vec<AddressArea>,group_count:i32)->HashMap<String,Vec<AddressArea>>{
+fn to_group_area_map(address_areas:&Vec<AddressArea>,group_count:usize)->HashMap<String,Vec<AddressArea>>{
 
     let arr:Vec<Vec<f64>> = address_areas.iter().map(|address_area|
         vec![address_area.x as f64,address_area.y as f64])
@@ -220,7 +229,7 @@ fn to_group_area_map(address_areas:&Vec<AddressArea>,group_count:i32)->HashMap<S
     //
     let matrix = DenseMatrix::from_2d_vec(&arr);
     // //
-    let kmeans = KMeans::fit(&matrix, KMeansParameters::default().with_k(group_count as usize)).unwrap(); // Fit to data, 2 clusters
+    let kmeans = KMeans::fit(&matrix, KMeansParameters::default().with_k(group_count)).unwrap(); // Fit to data, 2 clusters
     let y_hat = kmeans.predict(&matrix).unwrap(); // use the same points for prediction
 
     let mut group_area_map:HashMap<String,Vec<AddressArea>> = HashMap::new();

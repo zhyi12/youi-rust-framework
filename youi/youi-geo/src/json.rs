@@ -1,14 +1,12 @@
-use std::collections::HashMap;
-use geo::{Geometry, LineString, Point, point, Polygon};
+use std::collections::{HashMap, HashSet};
+use geo::{LineString, Point, Polygon};
 use geo::prelude::ConvexHull;
 use geojson::{FeatureCollection, GeoJson, Feature, JsonObject, JsonValue};
-use crate::AddressPoint;
 
 ///
 ///
 ///
-pub fn to_geo_json(k_area_points:&HashMap<String,Vec<Point<f64>>>,address_points:&Vec<AddressPoint>) -> GeoJson {
-
+pub fn to_geo_json(k_area_points:&HashMap<String,Vec<Point<f64>>>) -> GeoJson {
     //凸包输出多边形区域
     let mut geometries:Vec<Feature> = k_area_points.iter().map(|entry|{
         let poly_points:Polygon<f64> = Polygon::new(LineString::from(entry.1.clone()),vec![]);
@@ -25,17 +23,16 @@ pub fn to_geo_json(k_area_points:&HashMap<String,Vec<Point<f64>>>,address_points
         }
     }).collect();
 
-    address_points.iter().for_each(|p|{
-        let p1: Geometry<f64> = point!(x: p.lng, y: p.lat).into();
-        let mut properties:JsonObject = JsonObject::new();
-        properties.insert(String::from("k"),JsonValue::from(p.group));
-
-        geometries.push(Feature{
-            bbox: None,
-            geometry: Some(geojson::Geometry::from(&p1)),
-            id: None,
-            properties:Some(properties),
-            foreign_members: None
+    let mut point_keys = HashSet::new();
+    k_area_points.iter().for_each(|entry|{
+        entry.1.iter().for_each(|p|{
+            let mut xy:String = String::from(p.x().to_string());
+            xy.push_str(",");
+            xy.push_str(p.y().to_string().as_str());
+            if !point_keys.contains(&xy){
+                geometries.push(build_point_feature(entry.0,p));
+                point_keys.insert(xy);
+            }
         });
     });
 
@@ -44,4 +41,19 @@ pub fn to_geo_json(k_area_points:&HashMap<String,Vec<Point<f64>>>,address_points
         features: geometries,
         foreign_members: None
     })
+}
+///
+///
+///
+fn build_point_feature(key:&str,point:&Point<f64>)->Feature{
+    let mut properties:JsonObject = JsonObject::new();
+    properties.insert(String::from("k"),JsonValue::from(key));
+
+    Feature{
+        bbox: None,
+        geometry: Some(geojson::Geometry::from(point)),
+        id: None,
+        properties:Some(properties),
+        foreign_members: None
+    }
 }

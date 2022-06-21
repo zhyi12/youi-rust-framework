@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use geo::{LineString, Point, Polygon};
-use geo::prelude::ConvexHull;
+use geo::prelude::{Centroid, ConvexHull};
 use geojson::{FeatureCollection, GeoJson, Feature, JsonObject, JsonValue};
 
 ///
@@ -12,8 +12,12 @@ pub fn to_geo_json(k_area_points:&HashMap<String,Vec<Point<f64>>>) -> GeoJson {
         let poly_points:Polygon<f64> = Polygon::new(LineString::from(entry.1.clone()),vec![]);
         //凸包
         let hull =  poly_points.convex_hull();
+        let centroid = hull.centroid().unwrap();
         let mut properties:JsonObject = JsonObject::new();
         properties.insert(String::from("areaKey"),JsonValue::from(entry.0.to_string()));
+        properties.insert(String::from("count"),JsonValue::from(entry.1.len()));
+        properties.insert(String::from("centerX"),JsonValue::from(centroid.x()));
+        properties.insert(String::from("centerY"),JsonValue::from(centroid.y()));
         Feature{
             bbox: None,
             geometry: Some(geojson::Geometry::from(&hull)),

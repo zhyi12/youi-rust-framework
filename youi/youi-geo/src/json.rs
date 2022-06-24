@@ -1,6 +1,5 @@
 use std::collections::{HashMap, HashSet};
 use geo::{LineString, Point, Polygon};
-use geo::coords_iter::CoordsIter;
 use geo::prelude::{Centroid, ConvexHull};
 use geojson::{FeatureCollection, GeoJson, Feature, JsonObject, JsonValue};
 
@@ -19,7 +18,7 @@ pub fn to_geo_json(k_area_points:&HashMap<String,Vec<Point<f64>>>) -> GeoJson {
         properties.insert(String::from("count"),JsonValue::from(entry.1.len()));
         properties.insert(String::from("centerX"),JsonValue::from(centroid.x()));
         properties.insert(String::from("centerY"),JsonValue::from(centroid.y()));
-        properties.insert(String::from("addressCount"),JsonValue::from(calculateAddressCount(entry.1)));
+        properties.insert(String::from("addressCount"),JsonValue::from(calculate_address_count(entry.1)));
         Feature{
             bbox: None,
             geometry: Some(geojson::Geometry::from(&hull)),
@@ -49,7 +48,7 @@ pub fn to_geo_json(k_area_points:&HashMap<String,Vec<Point<f64>>>) -> GeoJson {
     })
 }
 
-fn calculateAddressCount(points: &Vec<Point<f64>>) ->usize{
+fn calculate_address_count(points: &Vec<Point<f64>>) ->usize{
     let mut point_keys = HashSet::new();
     points.iter().for_each(|p|{
         let mut xy:String = String::from(p.x().to_string());

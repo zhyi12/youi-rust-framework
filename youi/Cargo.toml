@@ -2,16 +2,12 @@
 name = "youi"
 version = "0.1.1"
 
-
-bench = [
-    "lazy",
-]
-
 [dependencies]
 youi-core = { version = "0.1.1", path = "./youi-core"}
 youi-fs = { version = "0.1.1", path = "./youi-fs"}
 youi-dataframe = { version = "0.1.1", path = "./youi-dataframe"}
 youi-geo = { version = "0.1.1", path = "./youi-geo"}
+youi-spider = { version = "0.1.1", path = "./youi-spider"}
 
 [lib]
 bench = false

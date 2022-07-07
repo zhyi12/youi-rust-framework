@@ -24,9 +24,10 @@ pub fn geo_tasks(tasks:Vec<GeoSpiderTask>)->String{
 fn task_feature(task:&GeoSpiderTask)->Feature{
     let mut properties:JsonObject = JsonObject::new();
     properties.insert(String::from("r"),JsonValue::from(task.r));
+    properties.insert(String::from("x"),JsonValue::from(task.x));
+    properties.insert(String::from("y"),JsonValue::from(task.y));
     properties.insert(String::from("d"),JsonValue::from(task.distance));
     properties.insert(String::from("count"),JsonValue::from(task.count));
-    properties.insert(String::from("pid"),JsonValue::from(task.pid));
     properties.insert(String::from("current"),JsonValue::from(task.current));
     properties.insert(String::from("page"),JsonValue::from(task.page));
     let hd =  task.distance/2.0;

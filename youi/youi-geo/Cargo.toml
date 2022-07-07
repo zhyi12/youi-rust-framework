@@ -6,7 +6,7 @@ edition = "2021"
 
 [dependencies]
 youi-dataframe = {version = "0.1.1",path="../youi-dataframe"}
-sqlx = { version = "0.5", features = ["runtime-async-std-rustls", "sqlite"] }
+sqlx = { version = "0.5", features = ["sqlite"] }
 smartcore = "0.2.0"
 geo = "0.20.1"
 geojson = "0.23.0"

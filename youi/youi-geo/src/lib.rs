@@ -1,6 +1,7 @@
 mod json;
 pub mod cluster;
 pub mod area;
+pub mod query;
 
 extern crate geo;
 

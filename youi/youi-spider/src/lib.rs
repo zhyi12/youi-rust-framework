@@ -8,7 +8,13 @@ pub mod json;
 /// 返回顶级任务集合的geo格式数据
 ///
 pub async fn area_geo_task(pool:&Pool<Sqlite>,area_id:&str)->Result<String,Error>{
-    let top_tasks = task::find_area_tasks(pool,area_id,1).await?;
+    let mut top_tasks = task::find_area_tasks(pool,area_id,1).await?;
+
+    if top_tasks.is_empty(){
+        task::init_task(pool,area_id).await?;
+        //再次获取
+        top_tasks = task::find_area_tasks(pool,area_id,1).await?;
+    }
 
     Ok(json::geo_tasks(top_tasks))
 }

@@ -73,7 +73,7 @@ fn find_fetch_count_tasks(tasks:Vec<GeoSpiderTask>)->Vec<i32>{
 ///
 /// 初始化任务
 ///
-async fn init_task(pool:&Pool<Sqlite>,area_id:&str)->Result<(),Error>{
+pub async fn init_task(pool:&Pool<Sqlite>,area_id:&str)->Result<(),Error>{
     println!("init {} task.",area_id);
     let geo_json = youi_geo::query::find_area_geo_json(pool,area_id).await.unwrap();
 

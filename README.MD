@@ -4,7 +4,7 @@ rust 应用框架，用于构建基于tauri app的rust桌面应用。
 
 # License
 
-* MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+* MIT license ([LICENSE-MIT](LICENSE.txt) or http://opensource.org/licenses/MIT)
 
 # 依赖项目
 ## 脚本语言

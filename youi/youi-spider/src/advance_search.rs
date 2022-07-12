@@ -13,7 +13,7 @@ pub struct AdvanceFilter{
 ///
 ///
 ///
-pub async fn find_advance_searches(pool:&Pool<Sqlite>,area_id:&str)->Result<Vec<Vec<AdvanceFilter>>,Error>{
+pub async fn find_advance_searches(pool:&Pool<Sqlite>,area_id:&str)->Result<String,Error>{
 
     let result = query("select id,start_year,end_year,start_reg_cap,end_reg_cap,total from stats_area_advance_search where area_id=?1 order by total desc")
         .bind(area_id).fetch_all(pool).await?;
@@ -71,6 +71,8 @@ pub async fn find_advance_searches(pool:&Pool<Sqlite>,area_id:&str)->Result<Vec<
 
     let count:usize = result.iter().map(|r|r.len()).sum();
     println!("{} {} {}", result.len(),count,len);
-    Ok(result)
+
+    let json_str = serde_json::to_string(&result).unwrap();
+    Ok(json_str)
 }
 

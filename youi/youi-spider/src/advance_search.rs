@@ -11,10 +11,11 @@ pub struct AdvanceFilter{
 }
 
 ///
-///
+/// 前置：已获取检索条件的total值。
+/// 组合检索条件，组合后返回置小于10000，条件数量小于6.
 ///
 pub async fn find_advance_searches(pool:&Pool<Sqlite>,area_id:&str)->Result<String,Error>{
-
+    //查询行政区划检索条件集合，total逆序
     let result = query("select id,start_year,end_year,start_reg_cap,end_reg_cap,total from stats_area_advance_search where area_id=?1 order by total desc")
         .bind(area_id).fetch_all(pool).await?;
 

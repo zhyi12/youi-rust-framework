@@ -1,11 +1,21 @@
+# youi-rust-framework
+
+rust 应用框架，用于构建基于tauri app的rust桌面应用。
+
+# License
+
+* MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
 
 # 依赖项目
+## 脚本语言
+Rhai: Rhai is an embedded scripting language and evaluation engine,[https://github.com/rhaiscript/rhai]()
 
-##
-tokio： Tokio is an event-driven, non-blocking I/O platform for writing asynchronous applications
+## 异步框架
+Tokio： Tokio is an event-driven, non-blocking I/O platform for writing asynchronous applications
 [https://github.com/tokio-rs/tokio]()
 ## 序列化
 serde
+
 serde-json
 
 ## 数据库访问

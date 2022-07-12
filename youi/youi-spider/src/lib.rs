@@ -3,6 +3,7 @@ use youi_geo::area::PolygonGrid;
 
 pub mod task;
 pub mod json;
+pub mod advance_search;
 
 ///
 /// 返回顶级任务集合的geo格式数据

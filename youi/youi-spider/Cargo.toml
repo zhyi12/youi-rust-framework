@@ -10,4 +10,5 @@ youi-geo = {version = "0.1.1",path="../youi-geo"}
 sqlx = { version = "0.5", features = ["sqlite"] }
 geo = "0.20.1"
 geojson = "0.23.0"
+serde = "1.0"
 serde_json = "1.0"
